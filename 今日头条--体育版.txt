@@ -1,0 +1,43 @@
+#! /usr/bin/env python
+# -*- coding: UTF-8 -*-
+import requests
+import csv
+import sys
+reload(sys)
+
+url_1 ='https://www.toutiao.com/api/pc/feed/?category=news_sports&utm_source=toutiao&widen=1&max_behot_time='
+url_2 ='&max_behot_time_tmp=1516582873&tadrequire=true&as=A145FA067564776&cp=5A65E4B7B7C6AE1&_signature=yf1-OwAAk6BLg4z-qFvlasn9fi'
+
+headers={
+'Cookie':'__guid=32687416.2631213935591168500.1516350690986.4834; UM_distinctid=1610d8b5f6461e-07c99bdf14d518-6b1b1079-100200-1610d8b5f651e0; uuid="w:0b02a7ec793f4e7d8f890750fab64954"; tt_webid=6512677531929675271; WEATHER_CITY=%E5%8C%97%E4%BA%AC; monitor_count=40; __tasessionId=2kwvmueg61516586853005; tt_webid=6512677531929675271; CNZZDATA1259612802=1046479936-1516346098-https%253A%252F%252Fwww.so.com%252F%7C1516583704',
+'Host':'www.toutiao.com',
+'Referer':'https://www.toutiao.com/ch/news_sports/',
+'User-Agent':'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
+}
+
+
+def get_toutiao(max_behot_time):
+    global toutiao,times
+    url =url_1+str(max_behot_time)+url_2
+    req= requests.get(url=url,headers=headers)
+    html =req.json()
+    toutiao=[]
+    times.append(html['next']['max_behot_time'])
+    print times
+    for data in html['data']:
+        try:
+            toutiao.append([data['title'],data['abstract'],data['source']])
+        except Exception as e:
+            print(e)
+
+    return toutiao
+
+times=[0]
+for i in range(5):
+    max_behot_time=times.pop()
+    get_toutiao(max_behot_time)
+with open("toutiao.csv","w") as csvfile:
+    writer =csv.writer(csvfile)
+    writer.writerow(["title","Summary","author"])
+    for data in toutiao:
+        writer.writerow(data)
