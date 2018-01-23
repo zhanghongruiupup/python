@@ -1,0 +1,24 @@
+import requests
+import urllib
+from lxml import etree
+from threading import Thread
+import time
+
+leaves=0
+number1=time.time()
+def down(data):
+    urllib.urlretrieve(data, 'pics/' + 'picture' + str(leaves) + '-----' + filename)
+for num in range(1,3):
+    url='http://www.xxhh.com/pics/page/%d/?l=331027'%num
+    req=requests.get(url)
+    html=req.text
+    tree=etree.HTML(html)
+    result=tree.xpath('//div[@class="picBox"]/div/img/@ _src')
+    for data in result:
+        leaves+=1
+        filename=data.split('/')[-1]
+        t=Thread(target=down,args=(data,))
+        t.start()
+number2=time.time()
+number=number2-number1
+print number
