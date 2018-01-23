@@ -1,0 +1,22 @@
+import urllib2
+import re
+import time
+second1=time.time()
+times=0
+for number in range(1,2):
+    url='http://www.921131.com/catalog.asp?cate=2&page=%d'%number
+    data=urllib2.urlopen(url)
+    html=data.read()
+    data=re.compile('<div class="post-body"><p>([\s\S]*?)</p><p')
+    pattern=data.findall(html)
+    for text in pattern:
+        times +=1
+        text=text.replace('<br />','')
+        num=str(times)+':'+text+'\n======================================================\n'
+        print num
+        f = file('duanzi2.txt', 'a')
+        f.write(num)
+        f.close()
+second2=time.time()
+second=second2-second1
+print second
