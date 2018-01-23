@@ -1,0 +1,25 @@
+import requests
+from lxml import etree
+import time
+times=0
+bingo=0
+number1=time.time()
+for num in range(1,2):
+    url='http://www.xxhh.com/duanzi/page/%d/?l=1516009800'%num
+    req=requests.get(url)
+    html=req.text
+    tree=etree.HTML(html)
+    result=tree.xpath('//div[@class="article"]')
+    author = tree.xpath('//div[@class="user-info-username"]/a/text()')
+    for data in result:
+        times += 1
+        content = data.xpath('pre/text()')
+        for i in content:
+            print str(times) + ':'+author[bingo]
+            loop = i + '\n======================================================\n'
+            print loop
+        bingo+=1
+number2=time.time()
+number=number2-number1
+print number
+
