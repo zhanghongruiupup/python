@@ -1,0 +1,42 @@
+# -*- coding: UTF-8 -*-
+import requests
+from threading import Thread
+import csv
+url_1= 'https://www.zhihu.com/api/v4/members/'
+url_2='/followees?include=data%5B*%5D.answer_count%2Carticles_count%2Cgender%2Cfollower_count%2Cis_followed%2Cis_following%2Cbadge%5B%3F(type%3Dbest_answerer)%5D.topics&limit=20&offset='
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+    'Host': 'www.zhihu.com',
+    'Referer': 'https://www.zhihu.com/people/zhang-xiao-qiang-92-84/following',
+    'Cookie': 'q_c1=c6a7b6974829460a811bc2b9bd009d61|1515832298000|1515832298000; __guid=74140564.397200286893586700.1515832095166.4863; _zap=c98ab162-4399-4bac-bc8c-f0167683a734; l_cap_id="ZmE2MjY1NWQzNmNiNGZlNzkyYTVmODUxYzhhODI1NGI=|1516151488|ec83153af614cf11eafedf4a4bfdc8134de1ae34"; r_cap_id="MDUxOGE4ZTQ5OTFjNGU4N2I3YjVjMDAyYTQyNzUwZTc=|1516151488|52ad95f2e81d66db91e69a295094028d39b49de1"; cap_id="NTFjZDZkODg2MDk1NDdiZWFkOGZhMTRlYzIwN2JiYTQ=|1516151488|e3e2fa32ea10f71a462683d9d1362ae08abc1569"; capsion_ticket="2|1:0|10:1516369889|14:capsion_ticket|44:OThjMzAwYzhiZjJhNDI3YTk0MTE0YzIzYTAzNWNlZWI=|56a12ffe0fd328527617d8199571072346ea5a48fc960a033ea737de93ac487f"; z_c0="2|1:0|10:1516369967|4:z_c0|92:Mi4xdVdsbkJ3QUFBQUFBY0t3OHQ3OEREU1lBQUFCZ0FsVk5Ma1pQV3dEMzVBRVhxeml3ZDFDX2liQnVDemRkUm5ocVlB|e096ea34fa84ad60dd08a6cfdeb093e109306ecb1f957bdad8af181b86cf5037"; __utma=155987696.1667398555.1516372759.1516372759.1516372759.1; __utmz=155987696.1516372759.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); aliyungf_tc=AQAAAJKzvE3vHwEAYTCwdRLO/nNs+tKn; d_c0="AICrsrlbBA2PTgE2nVgdsLHPuQpjf_zneGI=|1516410780"; _xsrf=3a04188d-88d3-4b20-891a-eb5b105a6eba; monitor_count=42'
+}
+def xiancheng(url):
+    global number,all_user
+    req = requests.get(url, headers=headers)
+    data = req.json()
+    for user in data['data']:
+        if user['follower_count'] > 10000:
+            number+=1
+            print str(number)+':'+user['name']
+            to_name.append(user['url_token'])
+    return data['paging']
+def get_following(user):
+    url=url_1+user+url_2+'0'
+    paging = xiancheng(url)
+    totals=paging['totals']
+    count=20
+    while totals>count:
+        url = url_1 + user + url_2 + str(count)
+        t=Thread(target=xiancheng,args=(url,))
+        t.start()
+        count+=20
+
+
+to_name=['zhang-xiao-qiang-92-84']
+number=0
+while len(to_name):
+
+    user=to_name.pop()
+    get_following(user)
+
