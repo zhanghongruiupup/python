@@ -1,0 +1,23 @@
+import pymongo
+import requests
+import time
+number=0
+client=pymongo.MongoClient()
+db=client.douban
+colletions=db.movies
+col_casts=db.casts
+def get_cast(id):
+    if not id:
+        return
+    try:
+        url='https://api.douban.com/v2/movie/celebrity/'+str(id)
+        req=requests.get(url)
+        data=req.json()
+        col_casts.update_one({'id':data['id']},{'$set':data},upsert=True)
+    except Exception as e:
+        print e
+for moive in colletions.find():
+    cast=moive['casts']
+    for message in cast:
+        print message['name'] +message['id']
+        get_cast(message['id'])

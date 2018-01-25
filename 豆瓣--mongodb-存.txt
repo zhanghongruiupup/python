@@ -1,0 +1,14 @@
+import requests
+import pymongo
+number=0
+client=pymongo.MongoClient()
+db=client.douban
+colletions=db.movies
+for start in range(0, 40, 20):
+    print('fetching', start)
+    url = 'https://api.douban.com/v2/movie/top250?start=' + str(start)
+    req = requests.get(url)
+    data = req.json()
+    colletions.insert_many(data['subjects'])
+    print data['subjects']
+    print 'done'
