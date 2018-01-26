@@ -1,0 +1,57 @@
+# -*- coding: UTF-8 -*-
+import requests
+import pymongo
+headers={'Cookie':'appver=1.5.0.75771',
+         'Referer': 'http://music.163.com/'
+      }
+
+client = pymongo.MongoClient()
+db = client.wangyiyinyue
+db_lists = db.playlists
+db_lyrics = db.lyrics
+
+def search(id):
+    url='http://music.163.com/api/search/pc'
+    data={'s':id,'offset':1,'limit':10,'type':1000}
+    req=requests.post(url,headers=headers,data=data)  #headres和data是必要信息
+    content=req.json()
+    lists=[]
+    for i in content['result']['playlists']: #遍历content['result']['playlists']所有键，包括id键
+        try:
+            lists.append(i['id'])
+        except Exception as e:
+            print 'None'
+            continue      #用异常处理防止某些不存在id
+    #print lists
+    return lists
+def list(song_id):
+    url='http://music.163.com/api/playlist/detail?id={}&updateTime=-1'
+    for i in song_id:
+        website=url.format(i)
+        req=requests.get(website,headers=headers)
+        content=req.json()
+        a=content['result']['tracks']
+        for j in a:
+            name=j['name']
+            db_lists.update_one({'歌名':name}, {'$set': content}, upsert=True) #存入数据库
+
+
+def lyrics():
+    url = 'http://music.163.com/api/song/lyric?os=pc&id={}&lv=-1&kv=-1&tv=-1'
+    for playlist in db_lists.find():
+        for track in playlist['result']['tracks']:
+            music_name=track['name']
+            song_id = track['id']
+            l_url = url.format(song_id)
+            req = requests.get(l_url, headers=headers)
+            content = req.json()
+            db_lyrics.update_one({'歌名': music_name}, {'$set': content}, upsert=True)
+
+
+
+def main():
+    song_id=search('张国荣')  #得到id,然后通过id得到其他信息
+    list(song_id)  #得到歌单信息
+    lyrics() #得到歌词
+if __name__=='__main__':
+    main()
