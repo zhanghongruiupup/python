@@ -1,0 +1,57 @@
+# -*- coding: UTF-8 -*-
+import requests
+import pymongo
+import threading
+page=0
+headers={'Cookie':'appver=1.5.0.75771',
+         'Referer': 'http://music.163.com/'
+      }
+
+client = pymongo.MongoClient()
+db = client.wangyiyinyue
+db_list = db.song_hot
+def search(id):
+    url='http://music.163.com/api/search/pc'
+    data={'s':id,'offset':1,'limit':60,'type':100}
+    req_1=requests.post(url,headers=headers,data=data)  #headres和data是必要信息
+    content_1=req_1.json()
+    lists_name=[]
+    lists_id = []
+    for i in content_1['result']['artists']: #遍历content['result']['playlists']所有键，包括id键
+        try:
+            lists_name.append(i['name'])
+            lists_id.append(i['id'])
+        except Exception as e:
+            print 'None'
+            continue      #用异常处理防止某些不存在id
+    return lists_name
+def song_name(singer_name):
+    for loop in singer_name:
+        threading.Thread(target=xc, args=(loop,)).start()
+def xc(loop):
+    global page
+    url = 'http://music.163.com/api/search/pc'
+    data={'s':loop,'offset':1,'limit':10,'type':1}
+    req=requests.post(url,headers=headers,data=data)  #headres和data是必要信息
+    content=req.json()
+    so_name = []
+    for j in content['result']['songs']:  # 遍历content['result']['playlists']所有键，包括id键
+        try:
+            so_name.append(j['name'])
+        except Exception as e:
+            print e
+            break
+            # 用异常处理防止某些不存在id
+        db_list.update_one({'歌手': loop}, {'$set': {'歌名': so_name}}, upsert=True)  # 存入数据库
+    page += 1
+    print page
+
+
+
+
+def main():
+    singer_name=search('歌手')  #得到id,然后通过id得到其他信息
+    song_name(singer_name)  # 得到一个歌手的歌曲
+
+if __name__=='__main__':
+    main()
