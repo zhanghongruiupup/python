@@ -1,0 +1,61 @@
+# -*- coding: UTF-8 -*-
+import requests
+import csv
+from lxml import etree
+from threading import Thread
+
+number = 0
+
+
+def search():
+    for num in range(1, 2):
+        url_1 = 'https://search.jd.com/Search?keyword=vivo&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&wq=vivo&ev=exbrand_vivo%5E&page='
+        url_2 = '&s=121&click=0'
+        url = url_1 + '%d' % num + url_2
+        req = requests.get(url)
+        html = req.text
+        tree = etree.HTML(html)
+        result = tree.xpath('//img/@ data-sku')
+        print result
+        return result
+
+
+def xiancheng(j):
+    url = 'https://item.jd.com/%s.html' % j
+    req = requests.get(url)
+    html = req.text
+    tree = etree.HTML(html)
+    # print etree.tostring(tree)
+    message = tree.xpath('//li/@title')
+    right=0
+    while right==0:
+        try:
+            url = 'https://p.3.cn/prices/mgets?skuIds=J_' + j
+            req = requests.get(url)
+            data = req.json()
+            message.append(data[0]['p'])
+            end=str(message)
+            print end
+            right = 1
+        except Exception as e:
+            right = 0
+
+
+
+
+def various(goods_id):  # 找每款产品信息
+    global number
+    for j in goods_id:
+        number += 1
+        t = Thread(target=xiancheng, args=(j,))
+        t.start()
+    print '查询数量：' + str(number)
+
+
+def main():
+    goods_id = search()  # 找页面id
+    various(goods_id)
+
+
+if __name__ == '__main__':
+    main()
